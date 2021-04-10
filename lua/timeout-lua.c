@@ -103,10 +103,9 @@ static int to__gc(lua_State *L)
 {
     struct timeout *to = to_checkudata(L, 1);
 
-    /*
-     * NB: On script exit it's possible for a timeout to still be
-     * associated with a timeouts object, particularly when the timeouts
-     * object was created first.
+    /* On script exit it's possible for a timeout to still be associated with
+     * a timeouts object, particularly when the timeouts object was created
+     * first.
      */
     timeout_del(to);
 
@@ -116,9 +115,7 @@ static int to__gc(lua_State *L)
 static int to_new(lua_State *L)
 {
     int flags = luaL_optinteger(L, 1, 0);
-    struct timeout *to;
-
-    to = lua_newuserdata(L, sizeof *to);
+    struct timeout *to = lua_newuserdata(L, sizeof *to);
     timeout_init(to, flags);
     luaL_setmetatable(L, TIMEOUT_METANAME);
 
@@ -144,9 +141,8 @@ static const luaL_Reg to_globals[] = {
 static void to_newmetatable(lua_State *L)
 {
     if (luaL_newmetatable(L, TIMEOUT_METANAME)) {
-        /*
-         * fill metamethod table, capturing the methods table as an
-         * upvalue for use by __index metamethod
+        /* fill metamethod table, capturing the methods table as an upvalue
+         * for use by __index metamethod
          */
         luaL_newlib(L, to_methods);
         luaL_setfuncs(L, to_metatable, 1);

@@ -1,7 +1,5 @@
-/* ==========================================================================
- * llrb.h - Iterative Left-leaning Red-Black Tree.
- * --------------------------------------------------------------------------
- * Copyright (c) 2011, 2013  William Ahern <william@25thandClement.com>
+/* llrb.c - Iterative Left-leaning Red-Black Tree.
+ * Copyright (c) 2011, 2013  William Ahern
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
@@ -49,18 +47,11 @@
  * 	  RB_FIND/LLRB_FIND.
  * ==========================================================================
  */
-#ifndef LLRB_H
-#define LLRB_H
 
-#define LLRB_VENDOR "william@25thandClement.com"
-#define LLRB_VERSION 0x20130925
-
-#ifndef LLRB_STATIC
 #ifdef __GNUC__
 #define LLRB_STATIC __attribute__((__unused__)) static
 #else
 #define LLRB_STATIC static
-#endif
 #endif
 
 #define LLRB_HEAD(name, type)  \
@@ -341,15 +332,11 @@
 #define LLRB_FOREACH(elm, name, head) \
     for ((elm) = LLRB_MIN(name, head); (elm); (elm) = name##_LLRB_NEXT((elm)))
 
-#endif /* LLRB_H */
-
-
 #include <stdlib.h>
 
 #include "timeout.h"
 
 #include "bench.h"
-
 
 struct rbtimeout {
     timeout_t expires;
@@ -364,7 +351,6 @@ struct rbtimeouts {
     LLRB_HEAD(tree, rbtimeout) tree;
 };
 
-
 static int timeoutcmp(struct rbtimeout *a, struct rbtimeout *b)
 {
     if (a->expires < b->expires) {
@@ -378,7 +364,7 @@ static int timeoutcmp(struct rbtimeout *a, struct rbtimeout *b)
     } else {
         return 0;
     }
-} /* timeoutcmp() */
+}
 
 LLRB_GENERATE_STATIC(tree, rbtimeout, rbe, timeoutcmp)
 
@@ -398,8 +384,7 @@ static void *init(struct timeout *timeout, size_t count, int verbose)
     }
 
     return T;
-} /* init() */
-
+}
 
 static void add(void *ctx, struct timeout *_to, timeout_t expires)
 {
@@ -412,8 +397,7 @@ static void add(void *ctx, struct timeout *_to, timeout_t expires)
     to->expires = T->curtime + expires;
     LLRB_INSERT(tree, &T->tree, to);
     to->pending = 1;
-} /* add() */
-
+}
 
 static void del(void *ctx, struct timeout *_to)
 {
@@ -423,8 +407,7 @@ static void del(void *ctx, struct timeout *_to)
     LLRB_REMOVE(tree, &T->tree, to);
     to->pending = 0;
     to->expires = 0;
-} /* del() */
-
+}
 
 static struct timeout *get(void *ctx)
 {
@@ -440,36 +423,27 @@ static struct timeout *get(void *ctx)
     }
 
     return NULL;
-} /* get() */
-
+}
 
 static void update(void *ctx, timeout_t ts)
 {
     struct rbtimeouts *T = ctx;
     T->curtime = ts;
-} /* update() */
+}
 
-
-static void check(void *ctx)
-{
-    return;
-} /* check() */
-
+static void check(void *ctx) {}
 
 static int empty(void *ctx)
 {
     struct rbtimeouts *T = ctx;
 
     return LLRB_EMPTY(&T->tree);
-} /* empty() */
-
+}
 
 static void destroy(void *ctx)
 {
     free(ctx);
-    return;
-} /* destroy() */
-
+}
 
 const struct benchops benchops = {
     .init = &init,

@@ -1,4 +1,4 @@
-/*
+/* Min-heap implementation
  * Copyright (c) 2006 Maxim Yegorushkin <maxim.yegorushkin@gmail.com>
  * All rights reserved.
  *
@@ -24,8 +24,6 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-#ifndef _MIN_HEAP_H_
-#define _MIN_HEAP_H_
 
 #include <err.h>
 #include <stdlib.h>
@@ -73,23 +71,28 @@ void min_heap_ctor(min_heap_t *s)
     s->n = 0;
     s->a = 0;
 }
+
 void min_heap_dtor(min_heap_t *s)
 {
     if (s->p)
         free(s->p);
 }
+
 void min_heap_elem_init(struct timeout *e)
 {
     e->min_heap_idx = -1;
 }
+
 int min_heap_empty(min_heap_t *s)
 {
     return 0u == s->n;
 }
+
 unsigned min_heap_size(min_heap_t *s)
 {
     return s->n;
 }
+
 struct timeout *min_heap_top(min_heap_t *s)
 {
     return s->n ? *s->p : 0;
@@ -120,10 +123,10 @@ int min_heap_erase(min_heap_t *s, struct timeout *e)
         struct timeout *last = s->p[--s->n];
         unsigned parent = (e->min_heap_idx - 1) / 2;
         /* we replace e with the last element in the heap.  We might need to
-           shift it upward if it is less than its parent, or downward if it is
-           greater than one or both its children. Since the children are known
-           to be less than the parent, it can't need to shift both up and
-           down. */
+         * shift it upward if it is less than its parent, or downward if it is
+         * greater than one or both its children. Since the children are known
+         * to be less than the parent, it can't need to shift both up and down.
+         */
         if (e->min_heap_idx > 0 && min_heap_elem_greater(s->p[parent], last))
             min_heap_shift_up_(s, e->min_heap_idx, last);
         else
@@ -176,9 +179,6 @@ void min_heap_shift_down_(min_heap_t *s, unsigned hole_index, struct timeout *e)
     min_heap_shift_up_(s, hole_index, e);
 }
 
-#endif /* _MIN_HEAP_H_ */
-
-
 static void *init(struct timeout *timeout, size_t count, int verbose)
 {
     min_heap_t *H;
@@ -195,8 +195,7 @@ static void *init(struct timeout *timeout, size_t count, int verbose)
     }
 
     return H;
-} /* init() */
-
+}
 
 static void add(void *ctx, struct timeout *to, timeout_t expires)
 {
@@ -205,14 +204,12 @@ static void add(void *ctx, struct timeout *to, timeout_t expires)
     to->expires = H->curtime + expires;
     if (0 != min_heap_push(H, to))
         err(1, "realloc");
-} /* add() */
-
+}
 
 static void del(void *ctx, struct timeout *to)
 {
     min_heap_erase(ctx, to);
-} /* del() */
-
+}
 
 static struct timeout *get(void *ctx)
 {
@@ -223,36 +220,31 @@ static struct timeout *get(void *ctx)
         return min_heap_pop(H);
 
     return NULL;
-} /* get() */
-
+}
 
 static void update(void *ctx, timeout_t ts)
 {
     min_heap_t *H = ctx;
     H->curtime = ts;
-} /* update() */
-
+}
 
 static void check(void *ctx)
 {
     return;
-} /* check() */
-
+}
 
 static int empty(void *ctx)
 {
     min_heap_t *H = ctx;
 
     return (NULL == min_heap_top(H));
-} /* empty() */
-
+}
 
 static void destroy(void *H)
 {
     free(H);
     return;
-} /* destroy() */
-
+}
 
 const struct benchops benchops = {
     .init = &init,

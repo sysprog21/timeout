@@ -14,6 +14,7 @@
 #include <lualib.h>
 
 #include "timeout.h"
+
 #include "bench.h"
 
 #if LUA_VERSION_NUM < 502
@@ -21,7 +22,7 @@ static int lua_absindex(lua_State *L, int idx)
 {
     return (idx > 0 || idx <= LUA_REGISTRYINDEX) ? idx
                                                  : lua_gettop(L) + idx + 1;
-} /* lua_absindex() */
+}
 
 static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
 {
@@ -35,7 +36,7 @@ static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
     }
 
     lua_pop(L, nup);
-} /* luaL_setfuncs() */
+}
 
 #define luaL_newlibtable(L, l) \
     lua_createtable(L, 0, (sizeof(l) / sizeof *(l)) - 1)
@@ -48,7 +49,6 @@ static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
-
 struct bench {
     const char *path;
     void *solib;
@@ -60,13 +60,11 @@ struct bench {
     struct timeout *timeout;
     struct benchops ops;
     timeout_t curtime;
-}; /* struct bench */
-
+};
 
 #if __APPLE__
 static mach_timebase_info_data_t timebase;
 #endif
-
 
 static int long long monotime(void)
 {
@@ -84,16 +82,14 @@ static int long long monotime(void)
 
     return (ts.tv_sec * 1000000L) + (ts.tv_nsec / 1000L);
 #endif
-} /* monotime() */
-
+}
 
 static int bench_clock(lua_State *L)
 {
     lua_pushnumber(L, (double) monotime() / 1000000L);
 
     return 1;
-} /* bench_clock() */
-
+}
 
 static int bench_new(lua_State *L)
 {
@@ -127,8 +123,7 @@ static int bench_new(lua_State *L)
     B->state = B->ops.init(B->timeout, B->count, B->verbose);
 
     return 1;
-} /* bench_new() */
-
+}
 
 static int bench_add(lua_State *L)
 {
@@ -144,8 +139,7 @@ static int bench_add(lua_State *L)
     B->ops.add(B->state, &B->timeout[i], t);
 
     return 0;
-} /* bench_add() */
-
+}
 
 static int bench_del(lua_State *L)
 {
@@ -159,8 +153,7 @@ static int bench_del(lua_State *L)
     }
 
     return 0;
-} /* bench_del() */
-
+}
 
 static int bench_fill(lua_State *L)
 {
@@ -187,8 +180,7 @@ static int bench_fill(lua_State *L)
     lua_pushinteger(L, (lua_Integer) timeout_max);
 
     return 2;
-} /* bench_fill() */
-
+}
 
 static int bench_expire(lua_State *L)
 {
@@ -208,8 +200,7 @@ static int bench_expire(lua_State *L)
     lua_pushinteger(L, (lua_Integer) i);
 
     return 1;
-} /* bench_expire() */
-
+}
 
 static int bench_empty(lua_State *L)
 {
@@ -218,8 +209,7 @@ static int bench_empty(lua_State *L)
     lua_pushboolean(L, B->ops.empty(B->state));
 
     return 1;
-} /* bench_empty() */
-
+}
 
 static int bench__next(lua_State *L)
 {
@@ -237,7 +227,7 @@ static int bench__next(lua_State *L)
     lua_setfield(L, -2, "expires");
 
     return 2;
-} /* bench__next() */
+}
 
 static int bench__pairs(lua_State *L)
 {
@@ -253,8 +243,7 @@ static int bench__pairs(lua_State *L)
     lua_pushinteger(L, 0);
 
     return 3;
-} /* bench__pairs() */
-
+}
 
 static int bench__gc(lua_State *L)
 {
@@ -266,8 +255,7 @@ static int bench__gc(lua_State *L)
     }
 
     return 0;
-} /* bench__gc() */
-
+}
 
 static const luaL_Reg bench_methods[] = {{"add", &bench_add},
                                          {"del", &bench_del},
@@ -300,4 +288,4 @@ int luaopen_bench(lua_State *L)
     luaL_newlib(L, bench_globals);
 
     return 1;
-} /* luaopen_bench() */
+}
