@@ -38,24 +38,6 @@
 #define TIMEOUT_PUBLIC
 #endif
 
-#define TIMEOUT_VERSION TIMEOUT_V_REL
-#define TIMEOUT_VENDOR "william@25thandClement.com"
-
-#define TIMEOUT_V_REL 0x20160226
-#define TIMEOUT_V_ABI 0x20160224
-#define TIMEOUT_V_API 0x20160226
-
-TIMEOUT_PUBLIC int timeout_version(void);
-
-TIMEOUT_PUBLIC const char *timeout_vendor(void);
-
-TIMEOUT_PUBLIC int timeout_v_rel(void);
-
-TIMEOUT_PUBLIC int timeout_v_abi(void);
-
-TIMEOUT_PUBLIC int timeout_v_api(void);
-
-
 /* integer type interfaces */
 
 #define TIMEOUT_C(n) UINT64_C(n)

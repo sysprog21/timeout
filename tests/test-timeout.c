@@ -8,21 +8,6 @@
 
 #define THE_END_OF_TIME ((timeout_t) -1)
 
-static int check_misc(void)
-{
-    if (TIMEOUT_VERSION != timeout_version())
-        return 1;
-    if (TIMEOUT_V_REL != timeout_v_rel())
-        return 1;
-    if (TIMEOUT_V_API != timeout_v_api())
-        return 1;
-    if (TIMEOUT_V_ABI != timeout_v_abi())
-        return 1;
-    if (strcmp(timeout_vendor(), TIMEOUT_VENDOR))
-        return 1;
-    return 0;
-}
-
 static int check_open_close(timeout_t hz_set, timeout_t hz_expect)
 {
     int err = 0;
@@ -384,7 +369,6 @@ int main(int argc, char **argv)
         }                           \
     } while (0)
 
-    DO(check_misc());
     DO(check_open_close(1000, 1000));
     DO(check_open_close(0, TIMEOUT_mHZ));
 
