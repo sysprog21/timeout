@@ -66,22 +66,21 @@
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#if !defined TAILQ_CONCAT
-#define TAILQ_CONCAT(head1, head2, field)                           \
-    do {                                                            \
-        if (!TAILQ_EMPTY(head2)) {                                  \
-            *(head1)->tqh_last = (head2)->tqh_first;                \
-            (head2)->tqh_first->field.tqe_prev = (head1)->tqh_last; \
-            (head1)->tqh_last = (head2)->tqh_last;                  \
-            TAILQ_INIT((head2));                                    \
-        }                                                           \
+#define LIST_MOVE(to, from, field)                           \
+    do {                                                     \
+        if (LIST_EMPTY(from)) {                              \
+            LIST_INIT((to));                                 \
+        } else {                                             \
+            (to)->lh_first = (from)->lh_first;               \
+            (to)->lh_first->field.le_prev = &(to)->lh_first; \
+            LIST_INIT((from));                               \
+        }                                                    \
     } while (0)
-#endif
 
-#if !defined TAILQ_FOREACH_SAFE
-#define TAILQ_FOREACH_SAFE(var, head, field, tvar) \
-    for ((var) = TAILQ_FIRST(head);                \
-         (var) && ((tvar) = TAILQ_NEXT(var, field), 1); (var) = (tvar))
+#if !defined LIST_FOREACH_SAFE
+#define LIST_FOREACH_SAFE(var, head, field, tvar) \
+    for ((var) = LIST_FIRST(head);                \
+         (var) && ((tvar) = LIST_NEXT(var, field), 1); (var) = (tvar))
 #endif
 
 
@@ -168,7 +167,7 @@ typedef uint8_t wheel_t;
 
 /* timer routines */
 
-TAILQ_HEAD(timeout_list, timeout);
+LIST_HEAD(timeout_list, timeout);
 
 struct timeouts {
     struct timeout_list wheel[WHEEL_NUM][WHEEL_LEN], expired;
@@ -186,11 +185,11 @@ static struct timeouts *timeouts_init(struct timeouts *T, timeout_t hz)
 
     for (i = 0; i < countof(T->wheel); i++) {
         for (j = 0; j < countof(T->wheel[i]); j++) {
-            TAILQ_INIT(&T->wheel[i][j]);
+            LIST_INIT(&T->wheel[i][j]);
         }
     }
 
-    TAILQ_INIT(&T->expired);
+    LIST_INIT(&T->expired);
 
     for (i = 0; i < countof(T->pending); i++) {
         T->pending[i] = 0;
@@ -222,17 +221,18 @@ static void timeouts_reset(struct timeouts *T)
     struct timeout *to;
     unsigned i, j;
 
-    TAILQ_INIT(&reset);
+    LIST_INIT(&reset);
 
     for (i = 0; i < countof(T->wheel); i++) {
         for (j = 0; j < countof(T->wheel[i]); j++) {
-            TAILQ_CONCAT(&reset, &T->wheel[i][j], tqe);
+            LIST_FOREACH (to, &T->wheel[i][j], le) {
+                to->pending = NULL;
+                TO_SET_TIMEOUTS(to, NULL);
+            }
         }
     }
 
-    TAILQ_CONCAT(&reset, &T->expired, tqe);
-
-    TAILQ_FOREACH (to, &reset, tqe) {
+    LIST_FOREACH (to, &T->expired, le) {
         to->pending = NULL;
         TO_SET_TIMEOUTS(to, NULL);
     }
@@ -260,9 +260,9 @@ timeout_t timeouts_hz(struct timeouts *T)
 void timeouts_del(struct timeouts *T, struct timeout *to)
 {
     if (to->pending) {
-        TAILQ_REMOVE(to->pending, to, tqe);
+        LIST_REMOVE(to, le);
 
-        if (to->pending != &T->expired && TAILQ_EMPTY(to->pending)) {
+        if (to->pending != &T->expired && LIST_EMPTY(to->pending)) {
             ptrdiff_t index = to->pending - &T->wheel[0][0];
             int wheel = index / WHEEL_LEN;
             int slot = index % WHEEL_LEN;
@@ -312,7 +312,7 @@ static void timeouts_sched_nopending(struct timeouts *T, struct timeout *to)
         timeouts_sched_future_nopending(T, to);
     } else {
         to->pending = &T->expired;
-        TAILQ_INSERT_TAIL(to->pending, to, tqe);
+        LIST_INSERT_HEAD(to->pending, to, le);
     }
 }
 
@@ -329,7 +329,7 @@ static void timeouts_sched_future_nopending(struct timeouts *T,
     slot = timeout_slot(wheel, to->expires);
 
     to->pending = &T->wheel[wheel][slot];
-    TAILQ_INSERT_TAIL(to->pending, to, tqe);
+    LIST_INSERT_HEAD(to->pending, to, le);
 
     T->pending[wheel] |= WHEEL_C(1) << slot;
 }
@@ -371,10 +371,8 @@ void timeouts_add(struct timeouts *T, struct timeout *to, timeout_t timeout)
 void timeouts_update(struct timeouts *T, abstime_t curtime)
 {
     timeout_t elapsed = curtime - T->curtime;
-    struct timeout_list todo;
-    int wheel;
-
-    TAILQ_INIT(&todo);
+    int wheel, i, n_todo = 0;
+    struct timeout_list todo[WHEEL_NUM * WHEEL_LEN];
 
     /*
      * There's no avoiding looping over every wheel. It's best to keep
@@ -411,7 +409,8 @@ void timeouts_update(struct timeouts *T, abstime_t curtime)
         while (pending & T->pending[wheel]) {
             /* ctz input cannot be zero: loop condition. */
             int slot = ctz(pending & T->pending[wheel]);
-            TAILQ_CONCAT(&todo, &T->wheel[wheel][slot], tqe);
+            struct timeout_list *target = &todo[n_todo++];
+            LIST_MOVE(target, &T->wheel[wheel][slot], le);
             T->pending[wheel] &= ~(UINT64_C(1) << slot);
         }
 
@@ -421,13 +420,15 @@ void timeouts_update(struct timeouts *T, abstime_t curtime)
 
     T->curtime = curtime;
 
-    while (!TAILQ_EMPTY(&todo)) {
-        struct timeout *to = TAILQ_FIRST(&todo);
+    for (i = 0; i < n_todo; ++i) {
+        while (!LIST_EMPTY(&todo[i])) {
+            struct timeout *to = LIST_FIRST(&todo[i]);
 
-        TAILQ_REMOVE(&todo, to, tqe);
-        to->pending = NULL;
+            LIST_REMOVE(to, le);
+            to->pending = NULL;
 
-        timeouts_sched_nopending(T, to);
+            timeouts_sched_nopending(T, to);
+        }
     }
 
     return;
@@ -455,7 +456,7 @@ bool timeouts_pending(struct timeouts *T)
 
 bool timeouts_expired(struct timeouts *T)
 {
-    return !TAILQ_EMPTY(&T->expired);
+    return !LIST_EMPTY(&T->expired);
 } /* timeouts_expired() */
 
 
@@ -516,7 +517,7 @@ static timeout_t timeouts_int(struct timeouts *T)
  */
 timeout_t timeouts_timeout(struct timeouts *T)
 {
-    if (!TAILQ_EMPTY(&T->expired))
+    if (!LIST_EMPTY(&T->expired))
         return 0;
 
     return timeouts_int(T);
@@ -525,10 +526,10 @@ timeout_t timeouts_timeout(struct timeouts *T)
 
 struct timeout *timeouts_get(struct timeouts *T)
 {
-    if (!TAILQ_EMPTY(&T->expired)) {
-        struct timeout *to = TAILQ_FIRST(&T->expired);
+    if (!LIST_EMPTY(&T->expired)) {
+        struct timeout *to = LIST_FIRST(&T->expired);
 
-        TAILQ_REMOVE(&T->expired, to, tqe);
+        LIST_REMOVE(to, le);
         to->pending = NULL;
         TO_SET_TIMEOUTS(to, NULL);
 
@@ -555,7 +556,7 @@ static struct timeout *timeouts_min(struct timeouts *T)
 
     for (i = 0; i < countof(T->wheel); i++) {
         for (j = 0; j < countof(T->wheel[i]); j++) {
-            TAILQ_FOREACH (to, &T->wheel[i][j], tqe) {
+            LIST_FOREACH (to, &T->wheel[i][j], le) {
                 if (!min || to->expires < min->expires)
                     min = to;
             }
@@ -609,7 +610,7 @@ bool timeouts_check(struct timeouts *T, FILE *fp)
     } else {
         timeout = timeouts_timeout(T);
 
-        if (!TAILQ_EMPTY(&T->expired))
+        if (!LIST_EMPTY(&T->expired))
             check(timeout == 0,
                   "wrong soft timeout (soft:%" TIMEOUT_PRIu
                   " != hard:%" TIMEOUT_PRIu ")\n",
@@ -660,7 +661,7 @@ struct timeout *timeouts_next(struct timeouts *T, struct timeouts_it *it)
                 YIELD(to);
             }
         } else {
-            TAILQ_FOREACH_SAFE (to, &T->expired, tqe, it->to) {
+            LIST_FOREACH_SAFE (to, &T->expired, le, it->to) {
                 YIELD(to);
             }
         }
@@ -669,7 +670,7 @@ struct timeout *timeouts_next(struct timeouts *T, struct timeouts_it *it)
     if (it->flags & TIMEOUTS_PENDING) {
         for (it->i = 0; it->i < countof(T->wheel); it->i++) {
             for (it->j = 0; it->j < countof(T->wheel[it->i]); it->j++) {
-                TAILQ_FOREACH_SAFE (to, &T->wheel[it->i][it->j], tqe, it->to) {
+                LIST_FOREACH_SAFE (to, &T->wheel[it->i][it->j], le, it->to) {
                     YIELD(to);
                 }
             }

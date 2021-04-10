@@ -86,8 +86,7 @@ struct timeout {
     struct timeout_list *pending;
 
     /** entry member for struct timeout_list lists */
-    TAILQ_ENTRY(timeout) tqe;
-    /* entry member for struct timeout_list lists */
+    LIST_ENTRY(timeout) le;
 
 #ifndef TIMEOUT_DISABLE_CALLBACKS
     struct timeout_cb callback; /**< ptional callback information */
