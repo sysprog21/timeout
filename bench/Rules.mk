@@ -9,7 +9,7 @@ $(top_builddir)/bench/bench-llrb.so: $(top_srcdir)/bench/bench-llrb.c
 
 $(BENCH_MODS:%=$(top_builddir)/bench/%): $(top_srcdir)/timeout.h $(top_srcdir)/timeout.c $(top_srcdir)/bench/bench.h
 	mkdir -p $(@D)
-	@$(SHRC); echo_cmd $(CC) -o $@ $(top_srcdir)/bench/$(@F:%.so=%.c) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $(ALL_SOFLAGS) $(ALL_LDFLAGS) $(ALL_LIBS)
+	@$(SHRC); echo_cmd $(CC) -o $@ $(top_srcdir)/bench/$(@F:%.so=%.c) $(LUA_CPPFLAGS) $(ALL_CPPFLAGS) $(ALL_CFLAGS) $(ALL_SOFLAGS) $(ALL_LDFLAGS) $(ALL_LIBS)
 
 $(BENCH_OPS:%=$(top_builddir)/bench/wheel-%.dat): $(top_builddir)/bench/bench-wheel.so $(top_builddir)/bench/bench.so $(top_srcdir)/bench/bench-aux.lua
 $(BENCH_OPS:%=$(top_builddir)/bench/heap-%.dat): $(top_builddir)/bench/bench-heap.so $(top_builddir)/bench/bench.so $(top_srcdir)/bench/bench-aux.lua

@@ -25,10 +25,8 @@ ALL_LDFLAGS = $(LDFLAGS)
 ALL_LIBS = $(LIBS)
 
 LUA_API = 5.3
-LUA = lua
-LUA51_CPPFLAGS = $(LUA_CPPFLAGS)
-LUA52_CPPFLAGS = $(LUA_CPPFLAGS)
-LUA53_CPPFLAGS = $(LUA_CPPFLAGS)
+LUA = lua$(LUA_API)
+LUA_CPPFLAGS += -I/usr/include/$(LUA)
 
 WHEEL_BIT = 6
 WHEEL_NUM = 4
@@ -41,8 +39,6 @@ SHRC = \
 	top_srcdir="$(top_srcdir)"; \
 	top_builddir="$(top_builddir)"; \
 	. "$${top_srcdir}/Rules.shrc"
-
-LUA_APIS = 5.1 5.2 5.3
 
 include $(top_srcdir)/lua/Rules.mk
 include $(top_srcdir)/bench/Rules.mk
