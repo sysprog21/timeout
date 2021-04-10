@@ -12,7 +12,7 @@
 
 #define ctz64(n) __builtin_ctzll(n)
 #define clz64(n) __builtin_clzll(n)
-#if LONG_BITS == 32
+#if LONG_MAX == INT32_MAX
 #define ctz32(n) __builtin_ctzl(n)
 #define clz32(n) __builtin_clzl(n)
 #else

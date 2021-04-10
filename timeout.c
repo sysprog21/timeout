@@ -139,33 +139,18 @@
 
 #if WHEEL_BIT == 6
 #define WHEEL_C(n) UINT64_C(n)
-#define WHEEL_PRIu PRIu64
-#define WHEEL_PRIx PRIx64
-
 typedef uint64_t wheel_t;
 
 #elif WHEEL_BIT == 5
-
 #define WHEEL_C(n) UINT32_C(n)
-#define WHEEL_PRIu PRIu32
-#define WHEEL_PRIx PRIx32
-
 typedef uint32_t wheel_t;
 
 #elif WHEEL_BIT == 4
-
 #define WHEEL_C(n) UINT16_C(n)
-#define WHEEL_PRIu PRIu16
-#define WHEEL_PRIx PRIx16
-
 typedef uint16_t wheel_t;
 
 #elif WHEEL_BIT == 3
-
 #define WHEEL_C(n) UINT8_C(n)
-#define WHEEL_PRIu PRIu8
-#define WHEEL_PRIx PRIx8
-
 typedef uint8_t wheel_t;
 
 #else
