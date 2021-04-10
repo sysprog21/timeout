@@ -43,21 +43,22 @@ SHRC = \
 include $(top_srcdir)/lua/Rules.mk
 include $(top_srcdir)/bench/Rules.mk
 
-all: test-timeout
+all: test-timeout test-bitops
 
 timeout.o: $(top_srcdir)/timeout.c
-test-timeout.o: $(top_srcdir)/test-timeout.c
 
-timeout.o test-timeout.o:
+timeout.o: $(top_srcdir)/timeout.c $(top_srcdir)/timeout-bitops.c $(top_srcdir)/timeout.h
 	@$(SHRC); echo_cmd $(CC) $(ALL_CFLAGS) -c -o $@ $${top_srcdir}/$(@F:%.o=%.c) $(ALL_CPPFLAGS)
 
-test-timeout: timeout.o test-timeout.o
-	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ timeout.o test-timeout.o
+test-timeout: timeout.o $(top_srcdir)/tests/test-timeout.c
+	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ timeout.o $(top_srcdir)/tests/test-timeout.c
+test-bitops: $(top_srcdir)/tests/test-bitops.c
+	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(top_srcdir)/tests/test-bitops.c
 
 .PHONY: clean clean~
 
 clean:
-	$(RM) $(top_builddir)/test-timeout $(top_builddir)/*.o
+	$(RM) $(top_builddir)/test-timeout $(top_builddir)/test-bitops $(top_builddir)/*.o
 	$(RM) -r $(top_builddir)/*.dSYM
 
 clean~:

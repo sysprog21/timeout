@@ -5,3 +5,5 @@
 *~
 *.so
 *.dSYM
+test-bitops
+test-timeout
