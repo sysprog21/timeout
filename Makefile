@@ -55,6 +55,11 @@ test-timeout: timeout.o $(top_srcdir)/tests/test-timeout.c
 test-bitops: $(top_srcdir)/tests/test-bitops.c
 	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(top_srcdir)/tests/test-bitops.c
 
+
+check: all
+	./test-bitops
+	./test-timeout
+
 .PHONY: clean clean~
 
 clean:
