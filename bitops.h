@@ -1,15 +1,17 @@
+#ifndef TIMEOUT_BITOPS_H
+#define TIMEOUT_BITOPS_H
+
 #include <stdint.h>
 #ifdef _MSC_VER
 #include <intrin.h> /* _BitScanForward, _BitScanReverse */
 #endif
 
-/* First define ctz and clz functions; these are compiler-dependent if
- * you want them to be fast. */
-#if defined(__GNUC__) && !defined(TIMEOUT_DISABLE_GNUC_BITOPS)
+/* First define ctz and clz functions. */
+#if defined(__GNUC__)
 
-/* On GCC and clang and some others, we can use __builtin functions. They
- * are not defined for n==0, but timeout.s never calls them with n==0. */
-
+/* On GCC and clang and some others, we can use __builtin functions. They are
+ * not defined for n==0, but timeout.c never calls them with n==0.
+ */
 #define ctz64(n) __builtin_ctzll(n)
 #define clz64(n) __builtin_clzll(n)
 #if LONG_MAX == INT32_MAX
@@ -20,10 +22,10 @@
 #define clz32(n) __builtin_clz(n)
 #endif
 
-#elif defined(_MSC_VER) && !defined(TIMEOUT_DISABLE_MSVC_BITOPS)
-
-/* On MSVC, we have these handy functions. We can ignore their return
- * values, since we will never supply val == 0. */
+#elif defined(_MSC_VER)
+/* On MSVC, we have these handy functions. We can ignore their return values,
+ * since we will never supply val == 0.
+ */
 
 static __inline int ctz32(unsigned long val)
 {
@@ -69,9 +71,7 @@ static __inline int clz64(uint64_t val)
 /* End of MSVC case. */
 
 #else
-
 /* TODO: There are more clever ways to do this in the generic case. */
-
 
 #define process_(one, cz_bits, bits)     \
     if (x < (one << (cz_bits - bits))) { \
@@ -145,6 +145,6 @@ static inline int ctz32(uint32_t x)
 #undef process64
 #undef process_
 
-/* End of generic case */
+#endif /* generic case */
 
-#endif /* End of defining ctz */
+#endif /* TIMEOUT_BITOPS_H */

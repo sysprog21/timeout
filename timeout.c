@@ -125,7 +125,7 @@
 #define WHEEL_MASK (WHEEL_LEN - 1)
 #define TIMEOUT_MAX ((TIMEOUT_C(1) << (WHEEL_BIT * WHEEL_NUM)) - 1)
 
-#include "timeout-bitops.c"
+#include "bitops.h"
 
 #if WHEEL_BIT == 6
 #define ctz(n) ctz64(n)

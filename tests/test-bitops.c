@@ -1,4 +1,4 @@
-#include "timeout-bitops.c"
+#include "bitops.h"
 
 #include <stdio.h>
 #include <stdlib.h>

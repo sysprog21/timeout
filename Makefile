@@ -47,7 +47,7 @@ all: test-timeout test-bitops
 
 timeout.o: $(top_srcdir)/timeout.c
 
-timeout.o: $(top_srcdir)/timeout.c $(top_srcdir)/timeout-bitops.c $(top_srcdir)/timeout.h
+timeout.o: $(top_srcdir)/timeout.c $(top_srcdir)/bitops.h $(top_srcdir)/timeout.h
 	@$(SHRC); echo_cmd $(CC) $(ALL_CFLAGS) -c -o $@ $${top_srcdir}/$(@F:%.o=%.c) $(ALL_CPPFLAGS)
 
 test-timeout: timeout.o $(top_srcdir)/tests/test-timeout.c
