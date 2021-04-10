@@ -25,9 +25,9 @@
 #ifndef TIMEOUT_H
 #define TIMEOUT_H
 
-#include <stdbool.h> /* bool */
-#include <stdio.h>   /* FILE */
 #include <inttypes.h> /* PRIu64 PRIx64 PRIX64 uint64_t */
+#include <stdbool.h>  /* bool */
+#include <stdio.h>    /* FILE */
 
 #include <sys/queue.h> /* TAILQ(3) */
 

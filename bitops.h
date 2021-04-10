@@ -6,9 +6,9 @@
 #include <intrin.h> /* _BitScanForward, _BitScanReverse */
 #endif
 
-/* First define ctz and clz functions. */
-#if defined(__GNUC__)
+/* First define ctz and clz functions */
 
+#if defined(__GNUC__)
 /* On GCC and clang and some others, we can use __builtin functions. They are
  * not defined for n==0, but timeout.c never calls them with n==0.
  */
@@ -146,5 +146,57 @@ static inline int ctz32(uint32_t x)
 #undef process_
 
 #endif /* generic case */
+
+/* bitwise rotation */
+
+/* We need to find a rotate idiom that accepts 0-sized rotates.  So we can't
+ * use the "normal" (v<<c) | (v >> (bits-c)), since if c==0, then v >>
+ * (bits-c) will be undefined.
+ *
+ * The definitions below will also work okay when c is greater than the
+ * bit width, though we don't actually require those.
+ */
+
+#if defined(_MSC_VER)
+/* MSVC provides these declarations in stdlib.h and intrin.h */
+
+#define rotr8(v, c) _rotr8((v), (c) &7)
+#define rotl8(v, c) _rotl8((v), (c) &7)
+#define rotr16(v, c) _rotr16((v), (c) &15)
+#define rotl16(v, c) _rotl16((v), (c) &15)
+#define rotr32(v, c) _rotr32((v), (c) &31)
+#define rotl32(v, c) _rotl32((v), (c) &31)
+#define rotr64(v, c) _rotr64((v), (c) &63)
+#define rotl64(v, c) _rotl64((v), (c) &63)
+
+#define DECLARE_ROTATE_(bits, type)
+
+#else
+/* Many modern compilers recognize the idiom here as equivalent to rotr/rotl,
+ * and emit a single instruction.
+ */
+#define DECLARE_ROTATE_(bits, type)                    \
+    static inline type rotl##bits(const type v, int c) \
+    {                                                  \
+        const int mask = (bits) -1;                    \
+        c &= mask;                                     \
+                                                       \
+        return (v << c) | (v >> (-c & mask));          \
+    } /* rotl() */                                     \
+                                                       \
+    static inline type rotr##bits(const type v, int c) \
+    {                                                  \
+        const int mask = (bits) -1;                    \
+        c &= mask;                                     \
+                                                       \
+        return (v >> c) | (v << (-c & mask));          \
+    } /* rotr() */
+#endif
+
+#define DECLARE_ROTATE(bits) DECLARE_ROTATE_(bits, uint##bits##_t)
+DECLARE_ROTATE(64);
+DECLARE_ROTATE(32);
+DECLARE_ROTATE(16);
+DECLARE_ROTATE(8);
 
 #endif /* TIMEOUT_BITOPS_H */

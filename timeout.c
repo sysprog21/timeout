@@ -1,5 +1,5 @@
 /*
- * timeout.c - Tickless hierarchical timing wheel.                                                                                                           
+ * timeout.c - Tickless hierarchical timing wheel.
  * Copyright (c) 2013, 2014  William Ahern
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -140,41 +140,30 @@
 #if WHEEL_BIT == 6
 #define WHEEL_C(n) UINT64_C(n)
 typedef uint64_t wheel_t;
+#define rotr(v, c) rotr64((v), (c))
+#define rotl(v, c) rotl64((v), (c))
 
 #elif WHEEL_BIT == 5
 #define WHEEL_C(n) UINT32_C(n)
 typedef uint32_t wheel_t;
+#define rotr(v, c) rotr32((v), (c))
+#define rotl(v, c) rotl32((v), (c))
 
 #elif WHEEL_BIT == 4
 #define WHEEL_C(n) UINT16_C(n)
 typedef uint16_t wheel_t;
+#define rotr(v, c) rotr16((v), (c))
+#define rotl(v, c) rotl16((v), (c))
 
 #elif WHEEL_BIT == 3
 #define WHEEL_C(n) UINT8_C(n)
 typedef uint8_t wheel_t;
+#define rotr(v, c) rotr8((v), (c))
+#define rotl(v, c) rotl8((v), (c))
 
 #else
 #error invalid WHEEL_BIT value
 #endif
-
-
-static inline wheel_t rotl(const wheel_t v, int c)
-{
-    if (!(c &= (sizeof v * CHAR_BIT - 1)))
-        return v;
-
-    return (v << c) | (v >> (sizeof v * CHAR_BIT - c));
-} /* rotl() */
-
-
-static inline wheel_t rotr(const wheel_t v, int c)
-{
-    if (!(c &= (sizeof v * CHAR_BIT - 1)))
-        return v;
-
-    return (v >> c) | (v << (sizeof v * CHAR_BIT - c));
-} /* rotr() */
-
 
 /* timer routines */
 
