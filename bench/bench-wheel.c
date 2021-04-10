@@ -18,10 +18,6 @@ static void *init(struct timeout *timeout, size_t count, int verbose)
         timeout_init(&timeout[i], 0);
     }
 
-#if TIMEOUT_DEBUG - 0
-    timeout_debug = verbose;
-#endif
-
     return T;
 } /* init() */
 

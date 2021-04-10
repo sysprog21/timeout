@@ -38,10 +38,6 @@
 
 #include "timeout.h"
 
-#if TIMEOUT_DEBUG - 0
-#include "timeout-debug.h"
-#endif
-
 #ifdef TIMEOUT_DISABLE_RELATIVE_ACCESS
 #define TO_SET_TIMEOUTS(to, T) ((void) 0)
 #else
