@@ -11,7 +11,17 @@
 
 #define TIMEOUT_PUBLIC static
 #include "timeout.c"
-#include "timeout.h"
+
+#include <math.h> /* ceil(3) */
+
+#define timeouts_f2i(T, f) \
+    ((timeout_t) ceil(     \
+        (f) *timeouts_hz((T)))) /* prefer late expiration over early */
+
+#define timeouts_i2f(T, i) ((double) (i) / timeouts_hz((T)))
+
+#define timeouts_addf(T, to, timeout) \
+    timeouts_add((T), (to), timeouts_f2i((T), (timeout)))
 
 #define TIMEOUT_METANAME "struct timeout"
 #define TIMEOUTS_METANAME "struct timeouts*"

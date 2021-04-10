@@ -205,26 +205,4 @@ TIMEOUT_PUBLIC struct timeout *timeouts_next(struct timeouts *,
     struct timeouts_it _it = TIMEOUTS_IT_INITIALIZER((flags)); \
     while (((var) = timeouts_next((T), &_it)))
 
-
-/* bonus wheel interfaces
- *
- * I usually use floating point timeouts in all my code, but it's cleaner to
- * separate it to keep the core algorithmic code simple.
- *
- * Using macros instead of static inline routines where <math.h> routines
- * might be used to keep -lm linking optional.
- *
- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
-
-#include <math.h> /* ceil(3) */
-
-#define timeouts_f2i(T, f) \
-    ((timeout_t) ceil(     \
-        (f) *timeouts_hz((T)))) /* prefer late expiration over early */
-
-#define timeouts_i2f(T, i) ((double) (i) / timeouts_hz((T)))
-
-#define timeouts_addf(T, to, timeout) \
-    timeouts_add((T), (to), timeouts_f2i((T), (timeout)))
-
 #endif /* TIMEOUT_H */
