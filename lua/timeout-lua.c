@@ -9,7 +9,6 @@
 #error only Lua 5.3 supported
 #endif
 
-#define TIMEOUT_PUBLIC static
 #include "timeout.c"
 
 #include <math.h> /* ceil(3) */

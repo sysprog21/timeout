@@ -202,7 +202,7 @@ static struct timeouts *timeouts_init(struct timeouts *T, timeout_t hz)
 } /* timeouts_init() */
 
 
-TIMEOUT_PUBLIC struct timeouts *timeouts_open(timeout_t hz, int *error)
+struct timeouts *timeouts_open(timeout_t hz, int *error)
 {
     struct timeouts *T;
 
@@ -238,7 +238,7 @@ static void timeouts_reset(struct timeouts *T)
 } /* timeouts_reset() */
 
 
-TIMEOUT_PUBLIC void timeouts_close(struct timeouts *T)
+void timeouts_close(struct timeouts *T)
 {
     /*
      * NOTE: Delete installed timeouts so timeout_pending() and
@@ -250,13 +250,13 @@ TIMEOUT_PUBLIC void timeouts_close(struct timeouts *T)
 } /* timeouts_close() */
 
 
-TIMEOUT_PUBLIC timeout_t timeouts_hz(struct timeouts *T)
+timeout_t timeouts_hz(struct timeouts *T)
 {
     return T->hertz;
 } /* timeouts_hz() */
 
 
-TIMEOUT_PUBLIC void timeouts_del(struct timeouts *T, struct timeout *to)
+void timeouts_del(struct timeouts *T, struct timeout *to)
 {
     if (to->pending) {
         TAILQ_REMOVE(to->pending, to, tqe);
@@ -349,9 +349,7 @@ static void timeouts_readd(struct timeouts *T, struct timeout *to)
 #endif
 
 
-TIMEOUT_PUBLIC void timeouts_add(struct timeouts *T,
-                                 struct timeout *to,
-                                 timeout_t timeout)
+void timeouts_add(struct timeouts *T, struct timeout *to, timeout_t timeout)
 {
 #ifndef TIMEOUT_DISABLE_INTERVALS
     if (to->flags & TIMEOUT_INT)
@@ -365,7 +363,7 @@ TIMEOUT_PUBLIC void timeouts_add(struct timeouts *T,
 } /* timeouts_add() */
 
 
-TIMEOUT_PUBLIC void timeouts_update(struct timeouts *T, abstime_t curtime)
+void timeouts_update(struct timeouts *T, abstime_t curtime)
 {
     timeout_t elapsed = curtime - T->curtime;
     struct timeout_list todo;
@@ -443,13 +441,13 @@ TIMEOUT_PUBLIC void timeouts_update(struct timeouts *T, abstime_t curtime)
 } /* timeouts_update() */
 
 
-TIMEOUT_PUBLIC void timeouts_step(struct timeouts *T, reltime_t elapsed)
+void timeouts_step(struct timeouts *T, reltime_t elapsed)
 {
     timeouts_update(T, T->curtime + elapsed);
 } /* timeouts_step() */
 
 
-TIMEOUT_PUBLIC bool timeouts_pending(struct timeouts *T)
+bool timeouts_pending(struct timeouts *T)
 {
     wheel_t pending = 0;
     int wheel;
@@ -462,7 +460,7 @@ TIMEOUT_PUBLIC bool timeouts_pending(struct timeouts *T)
 } /* timeouts_pending() */
 
 
-TIMEOUT_PUBLIC bool timeouts_expired(struct timeouts *T)
+bool timeouts_expired(struct timeouts *T)
 {
     return !TAILQ_EMPTY(&T->expired);
 } /* timeouts_expired() */
@@ -521,7 +519,7 @@ static timeout_t timeouts_int(struct timeouts *T)
  * Calculate the interval our caller can wait before needing to process
  * events.
  */
-TIMEOUT_PUBLIC timeout_t timeouts_timeout(struct timeouts *T)
+timeout_t timeouts_timeout(struct timeouts *T)
 {
     if (!TAILQ_EMPTY(&T->expired))
         return 0;
@@ -530,7 +528,7 @@ TIMEOUT_PUBLIC timeout_t timeouts_timeout(struct timeouts *T)
 } /* timeouts_timeout() */
 
 
-TIMEOUT_PUBLIC struct timeout *timeouts_get(struct timeouts *T)
+struct timeout *timeouts_get(struct timeouts *T)
 {
     if (!TAILQ_EMPTY(&T->expired)) {
         struct timeout *to = TAILQ_FIRST(&T->expired);
@@ -591,7 +589,7 @@ static struct timeout *timeouts_min(struct timeouts *T)
         }                        \
     } while (0)
 
-TIMEOUT_PUBLIC bool timeouts_check(struct timeouts *T, FILE *fp)
+bool timeouts_check(struct timeouts *T, FILE *fp)
 {
     timeout_t timeout;
     struct timeout *to;
@@ -655,8 +653,7 @@ TIMEOUT_PUBLIC bool timeouts_check(struct timeouts *T, FILE *fp)
     }                   \
     while (0)
 
-TIMEOUT_PUBLIC struct timeout *timeouts_next(struct timeouts *T,
-                                             struct timeouts_it *it)
+struct timeout *timeouts_next(struct timeouts *T, struct timeouts_it *it)
 {
     struct timeout *to;
 
@@ -697,7 +694,7 @@ TIMEOUT_PUBLIC struct timeout *timeouts_next(struct timeouts *T,
 
 /* timeout routines */
 
-TIMEOUT_PUBLIC struct timeout *timeout_init(struct timeout *to, int flags)
+struct timeout *timeout_init(struct timeout *to, int flags)
 {
     memset(to, 0, sizeof *to);
 
@@ -708,19 +705,19 @@ TIMEOUT_PUBLIC struct timeout *timeout_init(struct timeout *to, int flags)
 
 
 #ifndef TIMEOUT_DISABLE_RELATIVE_ACCESS
-TIMEOUT_PUBLIC bool timeout_pending(struct timeout *to)
+bool timeout_pending(struct timeout *to)
 {
     return to->pending && to->pending != &to->timeouts->expired;
 } /* timeout_pending() */
 
 
-TIMEOUT_PUBLIC bool timeout_expired(struct timeout *to)
+bool timeout_expired(struct timeout *to)
 {
     return to->pending && to->pending == &to->timeouts->expired;
 } /* timeout_expired() */
 
 
-TIMEOUT_PUBLIC void timeout_del(struct timeout *to)
+void timeout_del(struct timeout *to)
 {
     timeouts_del(to->timeouts, to);
 } /* timeout_del() */
