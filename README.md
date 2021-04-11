@@ -48,7 +48,7 @@ be able to build and run the benchmark suite.
 The following command will install all required and optional dependencies on
 Ubuntu Linux 18.04 or later:
 ```shell
-$ sudo apt install liblua5.3-dev
+$ sudo apt install lua5.3 liblua5.3-dev
 ```
 
 Build and execute the benchmark:
