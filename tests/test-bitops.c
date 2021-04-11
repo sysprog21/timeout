@@ -137,6 +137,5 @@ int main(int c, char **v)
         if (!check(testcases[i]))
             result = 1;
     }
-    puts(result ? "FAIL" : "OK");
     return result;
 }

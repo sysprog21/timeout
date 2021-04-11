@@ -362,11 +362,10 @@ int main(int argc, char **argv)
         }                               \
     } while (0)
 
-#define DO_N(n, fn)                 \
-    do {                            \
-        for (j = 0; j < (n); ++j) { \
-            DO(fn);                 \
-        }                           \
+#define DO_N(n, fn)               \
+    do {                          \
+        for (j = 0; j < (n); ++j) \
+            DO(fn);               \
     } while (0)
 
     DO(check_open_close(1000, 1000));
@@ -506,18 +505,6 @@ int main(int argc, char **argv)
     };
     DO(check_intervals(&icfg4));
 
-    if (n_failed) {
-        puts("\nFAIL");
-    } else {
-        puts("\nOK");
-    }
+    printf("\n");
     return !!n_failed;
 }
-
-/* TODO:
-
- * Solve PR#3.
-
- * Investigate whether any untaken branches are possible.
-
- */

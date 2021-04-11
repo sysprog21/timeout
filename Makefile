@@ -1,70 +1,86 @@
-# NOTE: GNU Make 3.81 won't export MAKEFLAGS if .POSIX is specified, but
-# Solaris make won't export MAKEFLAGS unless .POSIX is specified.
-$(firstword ignore).POSIX:
+CC ?= gcc
+CFLAGS = -O2 -g
+CFLAGS += -march=native
+CFLAGS += -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
+# Ensure consistent configurations while testing and benchmarking
+CFLAGS += -DWHEEL_BIT=6 -DWHEEL_NUM=4
 
-.DEFAULT_GOAL = all
+include mk/common.mk
+include mk/autoconf.mk
+include mk/lua.mk
 
-.SUFFIXES:
+OUT ?= out
+OBJS := timeout.o
+OBJS := $(addprefix $(OUT)/,$(OBJS))
+deps := $(OBJS:%.o=%.o.d)
+TESTS := $(wildcard tests/test-*.c)
+TESTBINS := $(TESTS:%.c=$(OUT)/%)
+deps += $(TESTBINS:%=%.o.d)
 
-all:
+BENCH_ALGOS = wheel heap llrb ebtree
+BENCH_OPS = add del expire
+BENCH_DATA := $(addprefix $(OUT)/bench/,$(foreach op,$(BENCH_OPS),$(BENCH_ALGOS:%=%-$(op).dat)))
+BENCH_MODS := bench.so $(BENCH_ALGOS:%=bench-%.so)
+BENCH_MODS := $(addprefix $(OUT)/bench/,$(BENCH_MODS))
+deps += $(BENCH_MODS:%.so=%.o.d)
 
-#
-# USER-MODIFIABLE MACROS
-#
-top_srcdir = .
-top_builddir = .
+all: $(OBJS)
 
-CFLAGS = -O2 -march=native -g -Wall -Wextra -Wno-unused-parameter -Wno-unused-function
-SOFLAGS = $$(auto_soflags)
-LIBS = $$(auto_libs)
+CFLAGS := -I. $(CFLAGS)
 
-ALL_CPPFLAGS = -I$(top_srcdir) -DWHEEL_BIT=$(WHEEL_BIT) -DWHEEL_NUM=$(WHEEL_NUM) $(CPPFLAGS)
-ALL_CFLAGS = $(CFLAGS)
-ALL_SOFLAGS = $(SOFLAGS)
-ALL_LDFLAGS = $(LDFLAGS)
-ALL_LIBS = $(LIBS)
+$(OUT)/%.o: %.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -c -MMD -MF $@.d $<
 
-LUA_API = 5.3
-LUA = lua$(LUA_API)
-LUA_CPPFLAGS += -I/usr/include/$(LUA)
+SHELL_HACK := $(shell mkdir -p $(OUT) $(OUT)/tests $(OUT)/bench)
 
-WHEEL_BIT = 6
-WHEEL_NUM = 4
+$(OUT)/tests/test-%: tests/test-%.c $(OBJS)
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ $(CFLAGS) -MMD -MF $(@:%=%.o.d) $< $(OBJS) $(LDFLAGS)
+	$(VECHO) "Running $@\n"
+	$(Q)$@ && $(call pass)
 
-RM = rm -f
+# Add libraries to the Lua environment
+LUA_CPATH=$(PWD)/$(OUT)/bench/bench.so
+export LUA_CPATH
 
-# END MACROS
+$(OUT)/bench/%.so: bench/%.c
+	$(VECHO) "  CC\t$@\n"
+	$(Q)$(CC) -o $@ \
+		$(CFLAGS) $(LUA_CFLAGS) -MMD -MF $(@:%.so=%.o.d) $< \
+		$(SO_FLAGS) $(LDFLAGS)
 
-SHRC = \
-	top_srcdir="$(top_srcdir)"; \
-	top_builddir="$(top_builddir)"; \
-	. "$${top_srcdir}/Rules.shrc"
+$(foreach algo,$(BENCH_ALGOS),$(OUT)/bench/bench-$(algo).so): $(OUT)/bench/bench.so
 
-include $(top_srcdir)/lua/Rules.mk
-include $(top_srcdir)/bench/Rules.mk
+$(OUT)/bench/%-add.dat: $(OUT)/bench/bench-%.so
+	$(VECHO) "  GEN\t$@\n"
+	$(Q)(cd bench ; $(LUA) bench-add.lua ../$<  > ../$@)
+$(OUT)/bench/%-del.dat: $(OUT)/bench/bench-%.so
+	$(VECHO) "  GEN\t$@\n"
+	$(Q)(cd bench ; $(LUA) bench-del.lua ../$< > ../$@)
+$(OUT)/bench/%-expire.dat: $(OUT)/bench/bench-%.so
+	$(VECHO) "  GEN\t$@\n"
+	$(Q)(cd bench ; $(LUA) bench-expire.lua ../$< > ../$@)
 
-all: test-timeout test-bitops
+$(OUT)/bench.eps: $(BENCH_DATA)
+	$(VECHO) "  PLOT\t$@\n"
+	$(Q)(cd $(OUT)/bench; gnuplot ../../bench/bench.plt > ../bench.eps)
 
-timeout.o: $(top_srcdir)/timeout.c
+$(OUT)/bench.pdf: $(OUT)/bench.eps
+	$(VECHO) "  GEN\t$@\n"
+	$(Q)ps2pdf $< $@
 
-timeout.o: $(top_srcdir)/timeout.c $(top_srcdir)/bitops.h $(top_srcdir)/timeout.h
-	@$(SHRC); echo_cmd $(CC) $(ALL_CFLAGS) -c -o $@ $${top_srcdir}/$(@F:%.o=%.c) $(ALL_CPPFLAGS)
+.PHONY: bench
+bench: $(OUT)/bench.pdf
 
-test-timeout: timeout.o $(top_srcdir)/tests/test-timeout.c
-	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ timeout.o $(top_srcdir)/tests/test-timeout.c
-test-bitops: $(top_srcdir)/tests/test-bitops.c
-	@$(SHRC); echo_cmd $(CC) $(ALL_CPPFLAGS) $(ALL_CFLAGS) -o $@ $(top_srcdir)/tests/test-bitops.c
+check: $(TESTBINS)
 
-
-check: all
-	./test-bitops
-	./test-timeout
-
-.PHONY: clean clean~
-
+.PHONY: clean
 clean:
-	$(RM) $(top_builddir)/test-timeout $(top_builddir)/test-bitops $(top_builddir)/*.o
-	$(RM) -r $(top_builddir)/*.dSYM
+	-$(RM) $(OBJS) $(deps)
+	-$(RM) $(TESTBINS)
+	-$(RM) $(OUT)/bench.eps $(OUT)/bench.pdf
+	-$(RM) $(OUT)/bench/*.dat
+	-$(RM) $(BENCH_MODS)
 
-clean~:
-	find $(top_builddir) $(top_srcdir) -name "*~" -exec $(RM) -- {} "+"
+-include $(deps)
