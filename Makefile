@@ -48,7 +48,7 @@ $(OUT)/bench/%.so: bench/%.c
 	$(VECHO) "  CC\t$@\n"
 	$(Q)$(CC) -o $@ \
 		$(CFLAGS) $(LUA_CFLAGS) -MMD -MF $(@:%.so=%.o.d) $< \
-		$(SO_FLAGS) $(LDFLAGS)
+		$(SO_FLAGS) $(LUA_LDFLAGS) $(LDFLAGS)
 
 $(foreach algo,$(BENCH_ALGOS),$(OUT)/bench/bench-$(algo).so): $(OUT)/bench/bench.so
 

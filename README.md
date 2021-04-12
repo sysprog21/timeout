@@ -51,6 +51,11 @@ Ubuntu Linux 18.04 or later:
 $ sudo apt install lua5.3 liblua5.3-dev ghostscript gnuplot
 ```
 
+macOS:
+```shell
+$ brew install lua@5.3 gnuplot ghostscript
+```
+
 Build and execute the benchmark:
 ```shell
 $ make bench
