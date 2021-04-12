@@ -68,11 +68,8 @@ static __inline int clz64(uint64_t val)
 }
 #endif
 
-/* End of MSVC case. */
-
-#else
+#else /* Generic */
 /* TODO: There are more clever ways to do this in the generic case. */
-
 #define process_(one, cz_bits, bits)     \
     if (x < (one << (cz_bits - bits))) { \
         rv += bits;                      \
@@ -83,7 +80,6 @@ static __inline int clz64(uint64_t val)
 static inline int clz64(uint64_t x)
 {
     int rv = 0;
-
     process64(32);
     process64(16);
     process64(8);
@@ -92,11 +88,11 @@ static inline int clz64(uint64_t x)
     process64(1);
     return rv;
 }
+
 #define process32(bits) process_((UINT32_C(1)), 32, (bits))
 static inline int clz32(uint32_t x)
 {
     int rv = 0;
-
     process32(16);
     process32(8);
     process32(4);
@@ -108,6 +104,7 @@ static inline int clz32(uint32_t x)
 #undef process_
 #undef process32
 #undef process64
+
 #define process_(one, bits)                 \
     if ((x & ((one << (bits)) - 1)) == 0) { \
         rv += bits;                         \
@@ -118,7 +115,6 @@ static inline int clz32(uint32_t x)
 static inline int ctz64(uint64_t x)
 {
     int rv = 0;
-
     process64(32);
     process64(16);
     process64(8);

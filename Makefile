@@ -35,7 +35,7 @@ $(OUT)/%.o: %.c
 SHELL_HACK := $(shell mkdir -p $(OUT) $(OUT)/tests $(OUT)/bench)
 
 $(OUT)/tests/test-%: tests/test-%.c $(OBJS)
-	$(VECHO) "  CC\t$@\n"
+	$(VECHO) "  CC+LD\t$@\n"
 	$(Q)$(CC) -o $@ $(CFLAGS) -MMD -MF $(@:%=%.o.d) $< $(OBJS) $(LDFLAGS)
 	$(VECHO) "Running $@\n"
 	$(Q)$@ && $(call pass)
@@ -45,7 +45,7 @@ LUA_CPATH=$(PWD)/$(OUT)/bench/bench.so
 export LUA_CPATH
 
 $(OUT)/bench/%.so: bench/%.c
-	$(VECHO) "  CC\t$@\n"
+	$(VECHO) "  CC+LD\t$@\n"
 	$(Q)$(CC) -o $@ \
 		$(CFLAGS) $(LUA_CFLAGS) -MMD -MF $(@:%.so=%.o.d) $< \
 		$(SO_FLAGS) $(LUA_LDFLAGS) $(LDFLAGS)

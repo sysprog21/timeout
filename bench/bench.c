@@ -26,10 +26,10 @@ static int lua_absindex(lua_State *L, int idx)
 
 static void luaL_setfuncs(lua_State *L, const luaL_Reg *l, int nup)
 {
-    int i, t = lua_absindex(L, -1 - nup);
+    int t = lua_absindex(L, -1 - nup);
 
     for (; l->name; l++) {
-        for (i = 0; i < nup; i++)
+        for (int i = 0; i < nup; i++)
             lua_pushvalue(L, -nup);
         lua_pushcclosure(L, l->func, nup);
         lua_setfield(L, t, l->name);
@@ -97,10 +97,9 @@ static int bench_new(lua_State *L)
     size_t count = luaL_optinteger(L, 2, 1000000);
     timeout_t timeout_max = luaL_optinteger(L, 3, 300 * 1000000L);
     int verbose = (lua_isnone(L, 4)) ? 0 : lua_toboolean(L, 4);
-    struct bench *B;
     struct benchops *ops;
 
-    B = lua_newuserdata(L, sizeof *B);
+    struct bench *B = lua_newuserdata(L, sizeof *B);
     memset(B, 0, sizeof *B);
 
     luaL_getmetatable(L, "BENCH*");
@@ -160,16 +159,15 @@ static int bench_fill(lua_State *L)
     struct bench *B = lua_touserdata(L, 1);
     size_t count = luaL_optinteger(L, 2, B->count);
     long timeout_inc = luaL_optinteger(L, 3, -1), timeout_max = 0, timeout;
-    size_t i;
 
     if (timeout_inc < 0) {
-        for (i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             timeout = random() % B->timeout_max;
             B->ops.add(B->state, &B->timeout[i], timeout);
             timeout_max = MAX(timeout, timeout_max);
         }
     } else {
-        for (i = 0; i < count; i++) {
+        for (size_t i = 0; i < count; i++) {
             timeout = timeout_inc + i;
             B->ops.add(B->state, &B->timeout[i], timeout_inc + i);
             timeout_max = MAX(timeout, timeout_max);

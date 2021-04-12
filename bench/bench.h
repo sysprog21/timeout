@@ -1,3 +1,6 @@
+#ifndef BENCH_H
+#define BENCH_H
+
 struct benchops {
     void *(*init)(struct timeout *, size_t, int);
     void (*add)(void *, struct timeout *, timeout_t);
@@ -8,4 +11,6 @@ struct benchops {
     int (*empty)(void *);
     struct timeout *(*next)(void *, struct timeouts_it *);
     void (*destroy)(void *);
-}; /* struct benchops() */
+};
+
+#endif
