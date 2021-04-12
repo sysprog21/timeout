@@ -23,18 +23,13 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <limits.h> /* CHAR_BIT */
-
-#include <stddef.h> /* NULL */
-#include <stdio.h>  /* FILE fprintf(3) */
-#include <stdlib.h> /* malloc(3) free(3) */
-
-#include <inttypes.h> /* UINT64_C uint64_t */
-
-#include <string.h> /* memset(3) */
-
-#include <errno.h> /* errno */
-
+#include <errno.h>     /* errno */
+#include <inttypes.h>  /* UINT64_C uint64_t */
+#include <limits.h>    /* CHAR_BIT */
+#include <stddef.h>    /* NULL */
+#include <stdio.h>     /* FILE fprintf(3) */
+#include <stdlib.h>    /* malloc(3) free(3) */
+#include <string.h>    /* memset(3) */
 #include <sys/queue.h> /* TAILQ(3) */
 
 #include "timeout.h"
@@ -544,38 +539,34 @@ static struct timeout *timeouts_min(struct timeouts *T)
 
 bool timeouts_check(struct timeouts *T, FILE *fp)
 {
-    timeout_t timeout;
     struct timeout *to;
 
     if ((to = timeouts_min(T))) {
         check(to->expires > T->curtime,
-              "missed timeout (expires:%" TIMEOUT_PRIu
-              " <= curtime:%" TIMEOUT_PRIu ")\n",
+              "missed timeout (expires:%" PRIu64 " <= curtime:%" PRIu64 ")\n",
               to->expires, T->curtime);
 
-        timeout = timeouts_int(T);
+        timeout_t timeout = timeouts_int(T);
         check(timeout <= to->expires - T->curtime,
-              "wrong soft timeout (soft:%" TIMEOUT_PRIu " > hard:%" TIMEOUT_PRIu
-              ") (expires:%" TIMEOUT_PRIu "; curtime:%" TIMEOUT_PRIu ")\n",
+              "wrong soft timeout (soft:%" PRIu64 " > hard:%" PRIu64
+              ") (expires:%" PRIu64 "; curtime:%" PRIu64 ")\n",
               timeout, (to->expires - T->curtime), to->expires, T->curtime);
 
         timeout = timeouts_timeout(T);
         check(timeout <= to->expires - T->curtime,
-              "wrong soft timeout (soft:%" TIMEOUT_PRIu " > hard:%" TIMEOUT_PRIu
-              ") (expires:%" TIMEOUT_PRIu "; curtime:%" TIMEOUT_PRIu ")\n",
+              "wrong soft timeout (soft:%" PRIu64 " > hard:%" PRIu64
+              ") (expires:%" PRIu64 "; curtime:%" PRIu64 ")\n",
               timeout, (to->expires - T->curtime), to->expires, T->curtime);
     } else {
-        timeout = timeouts_timeout(T);
+        timeout_t timeout = timeouts_timeout(T);
 
         if (!LIST_EMPTY(&T->expired))
             check(timeout == 0,
-                  "wrong soft timeout (soft:%" TIMEOUT_PRIu
-                  " != hard:%" TIMEOUT_PRIu ")\n",
+                  "wrong soft timeout (soft:%" PRIu64 " != hard:%" PRIu64 ")\n",
                   timeout, TIMEOUT_C(0));
         else
             check(timeout == ~TIMEOUT_C(0),
-                  "wrong soft timeout (soft:%" TIMEOUT_PRIu
-                  " != hard:%" TIMEOUT_PRIu ")\n",
+                  "wrong soft timeout (soft:%" PRIu64 " != hard:%" PRIu64 ")\n",
                   timeout, ~TIMEOUT_C(0));
     }
 
