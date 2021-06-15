@@ -68,10 +68,10 @@ struct timeout_cb {
         (flags)                    \
     }
 
-#define timeout_setcb(to, fn, arg)  \
+#define timeout_setcb(to, _fn, _arg)  \
     do {                            \
-        (to)->callback.fn = (fn);   \
-        (to)->callback.arg = (arg); \
+        (to)->callback.fn = (_fn);   \
+        (to)->callback.arg = (_arg); \
     } while (0)
 
 struct timeout {
